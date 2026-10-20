@@ -1,920 +1,310 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simulasi iPhone iOS</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: SF Pro / Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            overflow: hidden;
-            background-color: #0d0d12;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>iPhone Simulator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body {
+      background-color: #0b0b0e;
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; overflow: hidden;
+    }
+    .iphone-frame {
+      width: 100vw; height: 100vh; max-width: 420px; max-height: 880px;
+      background: #000; position: relative; overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+    @media (min-width: 440px) {
+      .iphone-frame { height: 90vh; border-radius: 50px; border: 12px solid #222; }
+    }
+    .dynamic-island {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 32px; background: #000; border-radius: 20px;
+      z-index: 1000; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+    }
+    .status-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 26px; color: #fff; font-size: 14px; font-weight: 600; z-index: 999;
+    }
+    .screen { position: absolute; inset: 0; display: none; flex-direction: column; }
+    .screen.active { display: flex !important; }
+    
+    #lock-screen {
+      background: url('https://i.pinimg.com/736x/8f/c9/2c/8fc92c42ea9787ffcd6ce4bc18a47ff7.jpg') center/cover no-repeat;
+      justify-content: space-between; padding: 60px 20px 40px 20px; z-index: 10; cursor: pointer;
+    }
+    .lock-time { color: #fff; text-align: center; margin-top: 20px; }
+    .lock-time .date { font-size: 18px; font-weight: 500; opacity: 0.9; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .lock-time .clock { font-size: 76px; font-weight: 700; line-height: 1; margin-top: 5px; text-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .swipe-hint {
+      text-align: center; color: #fff; font-size: 14px; font-weight: 500;
+      background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 20px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      width: fit-content; margin: 0 auto;
+    }
 
-        /* Glassmorphic Effects */
-        .glass {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
+    #passcode-screen { background: rgba(0,0,0,0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); justify-content: center; align-items: center; z-index: 20; }
+    .passcode-title { color: #fff; font-size: 18px; margin-bottom: 20px; }
+    .dots { display: flex; gap: 16px; margin-bottom: 40px; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; }
+    .dot.active { background: #fff; }
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .key { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.15); color: #fff; font-size: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .key:active { background: rgba(255,255,255,0.4); }
 
-        .glass-dark {
-            background: rgba(30, 30, 30, 0.65);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+    #home-screen {
+      background: url('https://i.pinimg.com/736x/8f/c9/2c/8fc92c42ea9787ffcd6ce4bc18a47ff7.jpg') center/cover no-repeat;
+      padding: 50px 16px 20px 16px; z-index: 5; overflow-y: auto;
+    }
+    .widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .widget { background: rgba(255,255,255,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 22px; padding: 16px; color: #fff; }
+    .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 12px; margin-bottom: 80px; }
+    .app-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+    .app-icon { width: 60px; height: 60px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative; }
+    .app-label { color: #fff; font-size: 11px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+    .dock { position: absolute; bottom: 16px; left: 16px; right: 16px; height: 84px; background: rgba(255,255,255,0.25); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 32px; display: flex; justify-content: space-around; align-items: center; padding: 0 10px; }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
+    .app-window { position: absolute; inset: 0; background: #fff; z-index: 100; display: none; flex-direction: column; }
+    .app-window.active { display: flex !important; }
+    .app-header { height: 60px; background: #f7f7f7; border-bottom: 1px solid #ddd; display: flex; align-items: center; padding: 20px 16px 0 16px; justify-content: space-between; }
+    .back-btn { color: #007aff; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .app-content { flex: 1; overflow-y: auto; }
 
-        /* iOS Wallpaper Background */
-        ./* 1. BACKGROUND LUAR (Latar belakang di sekeliling bingkai HP) */
-body {
-  background-color: #0b0b0e; /* Ganti kode warna hex di sini (contoh: #000000, #1a1a2e, #f5f5dc) */
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  overflow: hidden;
-}
-
-/* 2. WALLPAPER LOCK SCREEN (Layar Kunci) */
-#lock-screen {
-  background: url('https://i.pinimg.com/736x/8f/c9/2c/8fc92c42ea9787ffcd6ce4bc18a47ff7.jpg') center/cover no-repeat;
-}
-
-#home-screen {
-  background: url('https://i.pinimg.com/736x/8f/c9/2c/8fc92c42ea9787ffcd6ce4bc18a47ff7.jpg') center/cover no-repeat;
-        }
-
-        /* Keypad Ripple */
-        .pin-btn:active {
-            background-color: rgba(255, 255, 255, 0.4) !important;
-            transition: background-color 0.05s;
-        }
-
-        /* Custom Scrollbar Hide */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Screen Transitions */
-        .screen {
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-        }
-
-        .screen-hidden-up {
-            transform: translateY(-100%);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .screen-hidden-down {
-            transform: translateY(100%);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .app-open {
-            transform: scale(1);
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .app-closed {
-            transform: scale(0.85);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* Shake animation for wrong pin */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-12px); }
-            40%, 80% { transform: translateX(12px); }
-        }
-        .animate-shake {
-            animation: shake 0.4s ease-in-out;
-        }
-    </style>
+    .chat-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+    .chat-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+    .chat-info { flex: 1; }
+    .chat-name { font-weight: 600; font-size: 16px; }
+    .chat-msg { color: #666; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .chat-room { position: absolute; inset: 0; background: #efeae2; z-index: 110; display: none; flex-direction: column; }
+    .chat-room.active { display: flex !important; }
+    .messages-area { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .msg-bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 15px; line-height: 1.4; }
+    .msg-in { background: #fff; align-self: flex-start; border-top-left-radius: 2px; }
+    .msg-out { background: #d9fdd3; align-self: flex-end; border-top-right-radius: 2px; }
+  </style>
 </head>
-<body class="h-screen w-screen flex justify-center items-center bg-zinc-950 text-white">
+<body>
 
-    <!-- IPHONE FRAME MOCKUP -->
-    <div class="relative w-full max-w-[412px] h-[100vh] sm:h-[840px] bg-black sm:rounded-[50px] shadow-2xl border-0 sm:border-[10px] border-zinc-800 overflow-hidden flex flex-col justify-between">
-        
-        <!-- TOP DYNAMIC ISLAND / NOTCH & STATUS BAR -->
-        <div class="absolute top-0 inset-x-0 z-50 flex justify-between items-center px-7 pt-3 text-xs font-semibold pointer-events-none">
-            <span id="status-bar-time" class="text-white text-sm font-medium tracking-tight">04:34</span>
-            
-            <!-- Dynamic Island Notch -->
-            <div class="w-28 h-7 bg-black rounded-full flex items-center justify-between px-2.5 shadow-md pointer-events-auto">
-                <div class="w-3 h-3 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                    <div class="w-1.5 h-1.5 rounded-full bg-blue-900/50"></div>
-                </div>
-                <div class="w-2.5 h-2.5 rounded-full bg-zinc-900 border border-zinc-800"></div>
-            </div>
-
-            <!-- Status Icons -->
-            <div class="flex items-center space-x-1.5 text-white">
-                <i class="fa-solid fa-signal text-[10px]"></i>
-                <span class="text-[10px] font-bold">5G</span>
-                <div class="relative w-5 h-2.5 border border-white rounded-[3px] p-[1px] flex items-center">
-                    <div class="h-full w-[80%] bg-white rounded-[1px]"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- MAIN CONTAINER FOR SCREENS -->
-        <div class="relative w-full h-full overflow-hidden galaxy-bg">
-
-            <!-- Dynamic Starfield Background Decoration -->
-            <div class="absolute inset-0 opacity-40 pointer-events-none">
-                <div class="absolute top-12 left-10 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_white]"></div>
-                <div class="absolute top-36 right-16 w-1.5 h-1.5 bg-purple-200 rounded-full shadow-[0_0_10px_white]"></div>
-                <div class="absolute top-1/3 left-1/4 w-1 h-1 bg-blue-200 rounded-full"></div>
-                <div class="absolute bottom-1/3 right-10 w-2 h-2 bg-yellow-100 rounded-full shadow-[0_0_12px_gold]"></div>
-                <div class="absolute bottom-20 left-12 w-1.5 h-1.5 bg-white rounded-full"></div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- 1. LOCK SCREEN                             -->
-            <!-- ========================================== -->
-            <div id="screen-lock" class="screen absolute inset-0 z-30 flex flex-col justify-between pt-16 pb-10 px-6 cursor-pointer select-none" onclick="goToPasscode()">
-                <!-- Date and Time -->
-                <div class="flex flex-col items-center mt-4">
-                    <span id="lock-date" class="text-lg font-medium text-white/90 tracking-wide">Sabtu, 17 Oktober</span>
-                    <h1 id="lock-time" class="text-7xl font-bold text-white tracking-tight mt-1">04:34</h1>
-                    
-                    <!-- Language Tag -->
-                    <div class="mt-3 px-3 py-1 rounded-full glass text-xs text-white/90 flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-globe text-[11px]"></i>
-                        <span>Bahasa Indonesia</span>
-                    </div>
-                </div>
-
-                <!-- Notifications Center -->
-                <div class="w-full space-y-3 my-auto pt-6">
-                    <!-- Notification Card -->
-                    <div class="glass-dark rounded-2xl p-3.5 shadow-lg flex items-center space-x-3.5 border border-white/10 backdrop-blur-md">
-                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-600 shrink-0 shadow">
-                            <i class="fa-solid fa-list-check text-xl"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-baseline">
-                                <h4 class="text-sm font-semibold text-white truncate">Khaleed 0211</h4>
-                                <span class="text-[11px] text-white/60">sekarang</span>
-                            </div>
-                            <p class="text-xs text-white/80 truncate mt-0.5">21 November · 35 hari lagi</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Quick Actions & Swipe Hint -->
-                <div class="flex flex-col items-center space-y-6">
-                    <div class="w-full flex justify-between items-center px-4">
-                        <button class="w-12 h-12 rounded-full glass-dark flex items-center justify-center text-white text-lg active:scale-95 transition">
-                            <i class="fa-solid fa-flashlight"></i>
-                        </button>
-                        <button class="w-12 h-12 rounded-full glass-dark flex items-center justify-center text-white text-lg active:scale-95 transition">
-                            <i class="fa-solid fa-camera"></i>
-                        </button>
-                    </div>
-
-                    <p class="text-xs font-medium text-white/70 animate-pulse tracking-wide">Gesek ke atas untuk membuka</p>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- 2. PASSCODE / PIN SCREEN                   -->
-            <!-- ========================================== -->
-            <div id="screen-passcode" class="screen screen-hidden-down absolute inset-0 z-40 glass-dark backdrop-blur-2xl flex flex-col justify-between pt-20 pb-12 px-8">
-                <!-- Header -->
-                <div class="flex flex-col items-center space-y-6">
-                    <h2 class="text-lg font-medium text-white tracking-wide">0211</h2>
-                    
-                    <!-- PIN Dots -->
-                    <div id="pin-dots" class="flex space-x-4">
-                        <div class="w-3.5 h-3.5 rounded-full border-2 border-white/80 transition-all duration-200"></div>
-                        <div class="w-3.5 h-3.5 rounded-full border-2 border-white/80 transition-all duration-200"></div>
-                        <div class="w-3.5 h-3.5 rounded-full border-2 border-white/80 transition-all duration-200"></div>
-                        <div class="w-3.5 h-3.5 rounded-full border-2 border-white/80 transition-all duration-200"></div>
-                    </div>
-                </div>
-
-                <!-- Numeric Keypad -->
-                <div class="w-full max-w-[280px] mx-auto grid grid-cols-3 gap-5 my-auto">
-                    <!-- Key buttons 1 to 9 -->
-                    <button onclick="pressPin('1')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">1</span>
-                        <span class="text-[9px] tracking-widest text-transparent">.</span>
-                    </button>
-                    <button onclick="pressPin('2')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">2</span>
-                        <span class="text-[9px] tracking-widest text-white/60">ABC</span>
-                    </button>
-                    <button onclick="pressPin('3')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">3</span>
-                        <span class="text-[9px] tracking-widest text-white/60">DEF</span>
-                    </button>
-                    <button onclick="pressPin('4')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">4</span>
-                        <span class="text-[9px] tracking-widest text-white/60">GHI</span>
-                    </button>
-                    <button onclick="pressPin('5')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">5</span>
-                        <span class="text-[9px] tracking-widest text-white/60">JKL</span>
-                    </button>
-                    <button onclick="pressPin('6')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">6</span>
-                        <span class="text-[9px] tracking-widest text-white/60">MNO</span>
-                    </button>
-                    <button onclick="pressPin('7')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">7</span>
-                        <span class="text-[9px] tracking-widest text-white/60">PQRS</span>
-                    </button>
-                    <button onclick="pressPin('8')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">8</span>
-                        <span class="text-[9px] tracking-widest text-white/60">TUV</span>
-                    </button>
-                    <button onclick="pressPin('9')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">9</span>
-                        <span class="text-[9px] tracking-widest text-white/60">WXYZ</span>
-                    </button>
-                    <div></div>
-                    <button onclick="pressPin('0')" class="pin-btn w-16 h-16 rounded-full glass-dark border border-white/10 flex flex-col items-center justify-center mx-auto active:scale-95 transition">
-                        <span class="text-2xl font-light">0</span>
-                    </button>
-                    <div></div>
-                </div>
-
-                <!-- Footer Links -->
-                <div class="flex justify-between px-4 text-xs font-medium text-white/80">
-                    <button onclick="alert('Panggilan Darurat')" class="hover:text-white">Darurat</button>
-                    <button onclick="cancelPasscode()" class="hover:text-white">Batal</button>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- 3. HOME SCREEN                             -->
-            <!-- ========================================== -->
-            <div id="screen-home" class="screen absolute inset-0 z-10 flex flex-col justify-between pt-14 pb-4 px-4 overflow-y-auto no-scrollbar">
-                
-                <!-- TOP WIDGETS GRID -->
-                <div class="grid grid-cols-2 gap-3.5 mb-4">
-                    <!-- Calendar Widget -->
-                    <div class="bg-white rounded-[22px] p-3.5 text-zinc-900 shadow-lg flex flex-col justify-between h-36">
-                        <div>
-                            <span class="text-xs font-bold text-red-500 uppercase tracking-wider">Sabtu</span>
-                            <div class="text-4xl font-light text-zinc-900 leading-none mt-0.5">17</div>
-                        </div>
-                        <div class="space-y-1 mt-2 text-xs">
-                            <div class="flex items-center space-x-1.5 border-l-2 border-purple-500 pl-2">
-                                <span class="font-medium text-zinc-800 truncate">Belanja</span>
-                            </div>
-                            <div class="flex items-center space-x-1.5 border-l-2 border-purple-500 pl-2">
-                                <span class="font-medium text-zinc-800 truncate">Cuci baju</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Weather Widget -->
-                    <div class="bg-gradient-to-br from-sky-400 to-blue-600 rounded-[22px] p-3.5 text-white shadow-lg flex flex-col justify-between h-36">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-xs font-semibold tracking-wide flex items-center gap-1">
-                                    Seoul <i class="fa-solid fa-location-arrow text-[10px]"></i>
-                                </span>
-                                <div class="text-3xl font-light mt-0.5">18°</div>
-                            </div>
-                            <i class="fa-solid fa-sun text-yellow-300 text-2xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-medium">Sebagian Besar Cerah</p>
-                            <p class="text-[10px] text-white/80">T:21° R:12°</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- APP ICONS GRID (4x3) -->
-                <div class="grid grid-cols-4 gap-y-4 gap-x-2 my-auto px-1">
-                    
-                    <!-- Instagram -->
-                    <div onclick="openApp('app-instagram')" class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-brands fa-instagram text-white text-3xl"></i>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Instagram</span>
-                    </div>
-
-                    <!-- Foto / Galeri -->
-                    <div onclick="openApp('app-photos')" class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-white flex items-center justify-center shadow-md active:scale-90 transition transform p-2">
-                            <!-- Flower / Photos Icon Design -->
-                            <div class="grid grid-cols-2 gap-0.5 w-full h-full rounded-full overflow-hidden">
-                                <div class="bg-yellow-400 rounded-tl-full"></div>
-                                <div class="bg-red-400 rounded-tr-full"></div>
-                                <div class="bg-green-400 rounded-bl-full"></div>
-                                <div class="bg-blue-400 rounded-br-full"></div>
-                            </div>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Foto</span>
-                    </div>
-
-                    <!-- Mail -->
-                    <div class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="relative w-14 h-14 rounded-[14px] bg-gradient-to-b from-blue-400 to-blue-600 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-solid fa-envelope text-white text-2xl"></i>
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-black">2</span>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Mail</span>
-                    </div>
-
-                    <!-- Kalender -->
-                    <div class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-white flex flex-col items-center justify-center shadow-md active:scale-90 transition transform text-zinc-900">
-                            <span class="text-[9px] font-bold text-red-500 uppercase">Sabtu</span>
-                            <span class="text-xl font-bold leading-none">17</span>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Kalender</span>
-                    </div>
-
-                    <!-- Jam -->
-                    <div class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-black border border-zinc-700 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-regular fa-clock text-white text-2xl"></i>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Jam</span>
-                    </div>
-
-                    <!-- Catatan -->
-                    <div onclick="openApp('app-notes')" class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-amber-100 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-solid fa-note-sticky text-amber-600 text-2xl"></i>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Catatan</span>
-                    </div>
-
-                    <!-- Cuaca -->
-                    <div class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-gradient-to-b from-sky-400 to-blue-500 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-solid fa-cloud-sun text-yellow-300 text-2xl"></i>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Cuaca</span>
-                    </div>
-
-                    <!-- Pengaturan -->
-                    <div class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-gradient-to-b from-gray-400 to-zinc-600 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-solid fa-gear text-white text-2xl"></i>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Pengaturan</span>
-                    </div>
-
-                    <!-- Peta -->
-                    <div class="flex flex-col items-center space-y-1 group cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-emerald-100 relative overflow-hidden flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <div class="absolute inset-0 bg-amber-200/50 -rotate-45"></div>
-                            <i class="fa-solid fa-location-dot text-red-500 text-xl z-10"></i>
-                        </div>
-                        <span class="text-[11px] text-white font-medium drop-shadow">Peta</span>
-                    </div>
-
-                </div>
-
-                <!-- Search Capsule Button -->
-                <div class="flex justify-center my-3">
-                    <button class="glass px-4 py-1 rounded-full text-xs font-medium text-white/90 flex items-center space-x-1.5 shadow">
-                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
-                        <span>Cari</span>
-                    </button>
-                </div>
-
-                <!-- BOTTOM DOCK -->
-                <div class="glass-dark rounded-[28px] p-2.5 grid grid-cols-4 gap-3 my-1 border border-white/10 shadow-2xl">
-                    <!-- Phone -->
-                    <div onclick="openApp('app-phone')" class="flex justify-center cursor-pointer">
-                        <div class="relative w-14 h-14 rounded-[14px] bg-emerald-500 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-solid fa-phone text-white text-2xl"></i>
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-black">3</span>
-                        </div>
-                    </div>
-
-                    <!-- Safari -->
-                    <div class="flex justify-center cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-white flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-regular fa-compass text-blue-500 text-3xl"></i>
-                        </div>
-                    </div>
-
-                    <!-- WhatsApp (Ganti KakaoTalk) -->
-                    <div onclick="openApp('app-whatsapp')" class="flex justify-center cursor-pointer">
-                        <div class="relative w-14 h-14 rounded-[14px] bg-green-500 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-brands fa-whatsapp text-white text-3xl"></i>
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-black">15</span>
-                        </div>
-                    </div>
-
-                    <!-- Music -->
-                    <div class="flex justify-center cursor-pointer">
-                        <div class="w-14 h-14 rounded-[14px] bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center shadow-md active:scale-90 transition transform">
-                            <i class="fa-solid fa-music text-white text-2xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ========================================== -->
-            <!-- 4. APPLICATIONS (MODALS / FULLSCREENS)     -->
-            <!-- ========================================== -->
-
-            <!-- ------------------------------------------ -->
-            <!-- APP 1: WHATSAPP (iOS Style)               -->
-            <!-- ------------------------------------------ -->
-            <div id="app-whatsapp" class="app-closed screen absolute inset-0 z-50 bg-black text-white flex flex-col justify-between pt-12">
-                
-                <!-- Main Chat List View -->
-                <div id="wa-list-view" class="flex-1 flex flex-col overflow-hidden">
-                    <!-- Top Header -->
-                    <div class="px-4 py-2 flex justify-between items-center border-b border-zinc-800">
-                        <button class="text-blue-500 text-sm">Edit</button>
-                        <h2 class="text-base font-bold">Obrolan</h2>
-                        <button class="text-blue-500 text-lg"><i class="fa-regular fa-pen-to-square"></i></button>
-                    </div>
-
-                    <!-- Search Bar -->
-                    <div class="p-3">
-                        <div class="bg-zinc-900 rounded-xl px-3 py-1.5 flex items-center space-x-2 text-zinc-400 text-sm">
-                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            <span>Cari</span>
-                        </div>
-                    </div>
-
-                    <!-- Chat List Items (Scrollable) -->
-                    <div id="wa-chat-container" class="flex-1 overflow-y-auto divide-y divide-zinc-900 px-3">
-                        <!-- Items rendered via JavaScript -->
-                    </div>
-
-                    <!-- WhatsApp Bottom Navigation Bar -->
-                    <div class="bg-zinc-950 border-t border-zinc-800 py-2 px-6 flex justify-between items-center text-zinc-400 text-[10px]">
-                        <button class="flex flex-col items-center space-y-1">
-                            <i class="fa-solid fa-circle-notch text-lg"></i>
-                            <span>Status</span>
-                        </button>
-                        <button class="flex flex-col items-center space-y-1">
-                            <i class="fa-solid fa-phone text-lg"></i>
-                            <span>Panggilan</span>
-                        </button>
-                        <button class="flex flex-col items-center space-y-1 text-blue-500">
-                            <i class="fa-solid fa-comments text-lg"></i>
-                            <span>Obrolan</span>
-                        </button>
-                        <button class="flex flex-col items-center space-y-1">
-                            <i class="fa-solid fa-gear text-lg"></i>
-                            <span>Pengaturan</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Individual Chat Detail Window -->
-                <div id="wa-detail-view" class="hidden absolute inset-0 z-10 bg-zinc-950 flex flex-col pt-12">
-                    <!-- Chat Header -->
-                    <div class="px-3 py-2 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <button onclick="closeWaDetail()" class="text-blue-500 text-base flex items-center font-medium pr-1">
-                                <i class="fa-solid fa-chevron-left mr-1"></i>
-                            </button>
-                            <img id="wa-detail-avatar" src="" class="w-8 h-8 rounded-full object-cover">
-                            <div>
-                                <h3 id="wa-detail-name" class="text-xs font-bold text-white leading-tight">Nama Kontak</h3>
-                                <span class="text-[10px] text-zinc-400">online</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-4 text-blue-500 text-lg">
-                            <i class="fa-solid fa-video"></i>
-                            <i class="fa-solid fa-phone"></i>
-                        </div>
-                    </div>
-
-                    <!-- Chat Messages Area -->
-                    <div id="wa-messages-box" class="flex-1 p-4 overflow-y-auto space-y-3 bg-zinc-900/30">
-                        <!-- Messages dynamically rendered -->
-                    </div>
-
-                    <!-- Input Bar -->
-                    <div class="p-2 bg-zinc-900 border-t border-zinc-800 flex items-center space-x-2">
-                        <i class="fa-solid fa-plus text-blue-500 text-lg px-2"></i>
-                        <input type="text" placeholder="Pesan" class="flex-1 bg-zinc-800 text-white text-xs rounded-full px-3 py-2 focus:outline-none">
-                        <i class="fa-solid fa-camera text-blue-500 text-lg px-1"></i>
-                        <i class="fa-solid fa-microphone text-blue-500 text-lg px-1"></i>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ------------------------------------------ -->
-            <!-- APP 2: INSTAGRAM                           -->
-            <!-- ------------------------------------------ -->
-            <div id="app-instagram" class="app-closed screen absolute inset-0 z-50 bg-black text-white flex flex-col justify-between pt-12">
-                <!-- Header -->
-                <div class="px-4 py-2 flex justify-between items-center border-b border-zinc-800">
-                    <span id="ig-username-header" class="font-bold text-sm">username_kamu</span>
-                    <div class="flex items-center space-x-4 text-lg">
-                        <i class="fa-regular fa-square-plus"></i>
-                        <i class="fa-solid fa-bars"></i>
-                    </div>
-                </div>
-
-                <!-- Profile Info (Scrollable content) -->
-                <div class="flex-1 overflow-y-auto no-scrollbar">
-                    <div class="p-4 space-y-4">
-                        <!-- Profile Header Row -->
-                        <div class="flex items-center justify-between">
-                            <img id="ig-profile-pic" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" class="w-20 h-20 rounded-full border-2 border-zinc-700 object-cover">
-                            <div class="flex space-x-6 text-center">
-                                <div>
-                                    <div class="font-bold text-sm">12</div>
-                                    <div class="text-xs text-zinc-400">Postingan</div>
-                                </div>
-                                <div>
-                                    <div class="font-bold text-sm">1,240</div>
-                                    <div class="text-xs text-zinc-400">Pengikut</div>
-                                </div>
-                                <div>
-                                    <div class="font-bold text-sm">450</div>
-                                    <div class="text-xs text-zinc-400">Mengikuti</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bio Section -->
-                        <div>
-                            <h4 id="ig-display-name" class="font-bold text-xs">Nama Tampilan Kamu</h4>
-                            <p id="ig-bio-text" class="text-xs text-zinc-300 mt-0.5">✨ Digital Creator | 📍 Jakarta<br>Ganti teks bio ini di file javascript!</p>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex space-x-2 text-xs font-semibold">
-                            <button class="flex-1 bg-zinc-800 py-1.5 rounded-lg text-center">Edit Profil</button>
-                            <button class="flex-1 bg-zinc-800 py-1.5 rounded-lg text-center">Bagikan Profil</button>
-                        </div>
-                    </div>
-
-                    <!-- Posts Grid -->
-                    <div class="border-t border-zinc-800 mt-2">
-                        <div class="flex justify-around border-b border-zinc-800 py-2 text-lg">
-                            <i class="fa-solid fa-table-cells text-white"></i>
-                            <i class="fa-solid fa-clapperboard text-zinc-500"></i>
-                            <i class="fa-solid fa-user-tag text-zinc-500"></i>
-                        </div>
-                        <div class="grid grid-cols-3 gap-0.5">
-                            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300" class="aspect-square object-cover w-full">
-                            <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300" class="aspect-square object-cover w-full">
-                            <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300" class="aspect-square object-cover w-full">
-                            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=300" class="aspect-square object-cover w-full">
-                            <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=300" class="aspect-square object-cover w-full">
-                            <img src="https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=300" class="aspect-square object-cover w-full">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Instagram Bottom Nav -->
-                <div class="bg-black border-t border-zinc-800 py-2 px-6 flex justify-between items-center text-lg text-zinc-300">
-                    <i class="fa-solid fa-house"></i>
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <i class="fa-regular fa-square-plus"></i>
-                    <i class="fa-solid fa-film"></i>
-                    <div class="w-6 h-6 rounded-full border border-white overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" class="w-full h-full object-cover">
-                    </div>
-                </div>
-            </div>
-
-            <!-- ------------------------------------------ -->
-            <!-- APP 3: CATATAN / NOTES                     -->
-            <!-- ------------------------------------------ -->
-            <div id="app-notes" class="app-closed screen absolute inset-0 z-50 bg-black text-white flex flex-col justify-between pt-12 p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">Catatan</h2>
-                    <span class="text-amber-500 text-sm">Selesai</span>
-                </div>
-                
-                <div class="flex-1 bg-zinc-900 rounded-2xl p-4 overflow-y-auto space-y-3 border border-zinc-800">
-                    <div class="border-b border-zinc-800 pb-2">
-                        <h4 class="font-bold text-sm text-amber-400">Daftar Belanja Mingguan</h4>
-                        <p class="text-xs text-zinc-400">17 Oktober - Susu, Roti, Buah Apel...</p>
-                    </div>
-                    <div class="border-b border-zinc-800 pb-2">
-                        <h4 class="font-bold text-sm text-amber-400">Rencana Liburan</h4>
-                        <p class="text-xs text-zinc-400">Booking tiket pesawat & hotel...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ------------------------------------------ -->
-            <!-- APP 4: FOTO / GALLERY                      -->
-            <!-- ------------------------------------------ -->
-            <div id="app-photos" class="app-closed screen absolute inset-0 z-50 bg-black text-white flex flex-col justify-between pt-12">
-                <div class="px-4 py-2">
-                    <h2 class="text-xl font-bold">Galeri Foto</h2>
-                </div>
-                <div class="flex-1 overflow-y-auto grid grid-cols-3 gap-1 p-1">
-                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300" class="aspect-square object-cover">
-                    <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300" class="aspect-square object-cover">
-                    <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300" class="aspect-square object-cover">
-                    <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=300" class="aspect-square object-cover">
-                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=300" class="aspect-square object-cover">
-                </div>
-            </div>
-
-            <!-- ------------------------------------------ -->
-            <!-- APP 5: TELEPON                             -->
-            <!-- ------------------------------------------ -->
-            <div id="app-phone" class="app-closed screen absolute inset-0 z-50 bg-black text-white flex flex-col justify-between pt-12 p-4">
-                <h2 class="text-xl font-bold text-center mb-4">Telepon</h2>
-                <div class="text-center text-3xl font-light mb-6 tracking-widest h-8" id="phone-number-display"></div>
-                <div class="grid grid-cols-3 gap-4 max-w-[240px] mx-auto mb-8">
-                    <button onclick="dialNum('1')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">1</button>
-                    <button onclick="dialNum('2')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">2</button>
-                    <button onclick="dialNum('3')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">3</button>
-                    <button onclick="dialNum('4')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">4</button>
-                    <button onclick="dialNum('5')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">5</button>
-                    <button onclick="dialNum('6')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">6</button>
-                    <button onclick="dialNum('7')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">7</button>
-                    <button onclick="dialNum('8')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">8</button>
-                    <button onclick="dialNum('9')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">9</button>
-                    <button onclick="dialNum('*')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">*</button>
-                    <button onclick="dialNum('0')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">0</button>
-                    <button onclick="dialNum('#')" class="w-14 h-14 rounded-full bg-zinc-800 text-xl font-medium mx-auto">#</button>
-                </div>
-                <div class="flex justify-center mb-6">
-                    <button class="w-14 h-14 rounded-full bg-green-500 text-white text-2xl flex items-center justify-center">
-                        <i class="fa-solid fa-phone"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- GLOBAL HOME BAR (SWIPE UP / CLICK TO GO HOME) -->
-            <div onclick="closeCurrentApp()" class="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/70 rounded-full z-[100] cursor-pointer hover:bg-white active:scale-95 transition"></div>
-
-        </div>
+  <div class="iphone-frame">
+    <div class="dynamic-island"></div>
+    <div class="status-bar">
+      <span id="status-clock">04:34</span>
+      <div style="display:flex; gap:6px;">📶 5G 🔋</div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        /* ======================================================
-           1. DATA CONFIGURATION (BISA KAMU EDIT SENDIRI DENGAN EASY)
-           ====================================================== */
-        
-        // PASSCODE PIN default (4 angka)
-        const DEFAULT_PIN = "1234";
+    <!-- LOCK SCREEN -->
+    <div id="lock-screen" class="screen active" onclick="showPasscode()">
+      <div class="lock-time">
+        <div class="date">Rabu, 21 Oktober</div>
+        <div class="clock" id="lock-clock">04:34</div>
+      </div>
+      <div class="swipe-hint">💡 Ketuk Layar Untuk Membuka</div>
+    </div>
 
-        // DATA WHATSAPP (Ubah nama, avatar, dan pesan obrolan di sini)
-        const whatsappChats = [
-            {
-                id: 1,
-                name: "Khaleed خالد♥️",
-                avatar: "https://i.pinimg.com/736x/87/4c/f0/874cf0eeef11bb43b832b4bfa293c5d6.jpg",
-                time: "Kemarin",
-                unread: 0,
-                messages: [
-                    { sender: "me", text: "Miss you so much ;(" },
-                    { sender: "them", text1: "😂 لماذا أنت مضحكٌ جداً؟ ههه" }
-                    { sender: "them", text2: "I will go to Indonesia later" }
-                ]
-            },
-            {
-                id: 2,
-                name: "Mama",
-                avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-                time: "Kemarin",
-                unread: 0,
-                messages: [
-                    { sender: "me", text: "Ma, udah makan belum?" },
-                    { sender: "them", text: "iya mama juga" }
-                ]
-            },
-            {
-                id: 3,
-                name: "Pengumuman Penjas",
-                avatar: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150",
-                time: "Kemarin",
-                unread: 3,
-                messages: [
-                    { sender: "them", text: "Besok kumpul jam 7 pagi ya!" },
-                    { sender: "me", text: "Siap" }
-                ]
-            },
-            {
-                id: 4,
-                name: "윤찬",
-                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-                time: "Kemarin",
-                unread: 0,
-                messages: [
-                    { sender: "them", text: "tapi lo ngikutin 소희 ya?" }
-                ]
-            }
-        ];
+    <!-- PASSCODE SCREEN -->
+    <div id="passcode-screen" class="screen">
+      <div class="passcode-title">Masukkan Passcode</div>
+      <div class="dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="keypad">
+        <div class="key" onclick="pressKey('1')">1</div>
+        <div class="key" onclick="pressKey('2')">2</div>
+        <div class="key" onclick="pressKey('3')">3</div>
+        <div class="key" onclick="pressKey('4')">4</div>
+        <div class="key" onclick="pressKey('5')">5</div>
+        <div class="key" onclick="pressKey('6')">6</div>
+        <div class="key" onclick="pressKey('7')">7</div>
+        <div class="key" onclick="pressKey('8')">8</div>
+        <div class="key" onclick="pressKey('9')">9</div>
+        <div class="key" style="opacity:0"></div>
+        <div class="key" onclick="pressKey('0')">0</div>
+      </div>
+    </div>
 
-        // DATA INSTAGRAM (Ubah username & bio kamu di sini)
-        const instagramData = {
-            username: "user_instagram",
-            displayName: "Nama Kamuu",
-            bio: "✨ Living life one day at a time\n📍 Jakarta, Indonesia\n💬 DM for collab",
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
-        };
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen">
+      <div class="widgets">
+        <div class="widget" style="background:#fff; color:#000;">
+          <div style="color:#ff3b30; font-size:12px; font-weight:700;">RABU</div>
+          <div style="font-size:32px; font-weight:700;">21</div>
+          <div style="font-size:12px; color:#666; margin-top:5px;">• Belanja<br>• Cuci baju</div>
+        </div>
+        <div class="widget" style="background:#2a82e4;">
+          <div style="font-size:12px;">Seoul 📍</div>
+          <div style="font-size:28px; font-weight:700; margin:4px 0;">18°</div>
+          <div style="font-size:11px;">Cerah Berawan</div>
+        </div>
+      </div>
 
+      <div class="app-grid">
+        <div class="app-item" onclick="openApp('wa')">
+          <div class="app-icon" style="background:#25D366;">💬</div>
+          <span class="app-label">WhatsApp</span>
+        </div>
+        <div class="app-item" onclick="openApp('ig')">
+          <div class="app-icon" style="background:linear-gradient(45deg, #f09433, #bc1888);">📸</div>
+          <span class="app-label">Instagram</span>
+        </div>
+        <div class="app-item" onclick="openApp('notes')">
+          <div class="app-icon" style="background:#fbc02d;">📝</div>
+          <span class="app-label">Catatan</span>
+        </div>
+        <div class="app-item">
+          <div class="app-icon" style="background:#fff;">🖼️</div>
+          <span class="app-label">Foto</span>
+        </div>
+      </div>
 
-        /* ======================================================
-           2. APP LOGIC & INTERACTION
-           ====================================================== */
+      <div class="dock">
+        <div class="app-item" onclick="openApp('wa')"><div class="app-icon" style="background:#25D366;">💬</div></div>
+        <div class="app-item" onclick="openApp('ig')"><div class="app-icon" style="background:linear-gradient(45deg, #f09433, #bc1888);">📸</div></div>
+        <div class="app-item"><div class="app-icon" style="background:#107c41;">✉️</div></div>
+        <div class="app-item"><div class="app-icon" style="background:#333;">⚙️</div></div>
+      </div>
+    </div>
 
-        let enteredPin = "";
-        let activeAppId = null;
+    <!-- WHATSAPP WINDOW -->
+    <div id="wa-app" class="app-window">
+      <div class="app-header">
+        <span class="back-btn" onclick="closeApp('wa')">‹ Home</span>
+        <span style="font-weight:600;">WhatsApp</span>
+        <span style="width:40px;"></span>
+      </div>
+      <div class="app-content" id="chat-list"></div>
+    </div>
 
-        // Initialize Data on Load
-        window.onload = function() {
-            renderWhatsAppList();
-            applyInstagramData();
-        };
+    <!-- CHAT ROOM WINDOW -->
+    <div id="chat-room" class="chat-room">
+      <div class="app-header">
+        <span class="back-btn" onclick="closeChat()">‹ Chat</span>
+        <span id="chat-title" style="font-weight:600;">Nama</span>
+        <span style="width:40px;"></span>
+      </div>
+      <div class="messages-area" id="messages-container"></div>
+    </div>
+  </div>
 
-        // Render Instagram Profile Data
-        function applyInstagramData() {
-            document.getElementById('ig-username-header').innerText = instagramData.username;
-            document.getElementById('ig-display-name').innerText = instagramData.displayName;
-            document.getElementById('ig-bio-text').innerText = instagramData.bio;
-            document.getElementById('ig-profile-pic').src = instagramData.avatar;
-        }
+  <script>
+    const whatsappChats = [
+      {
+        id: 1,
+        name: "Khaleed خالد♥️",
+        avatar: "https://i.pinimg.com/736x/87/4c/f0/874cf0eeef11bb43b832b4bfa293c5d6.jpg",
+        time: "Kemarin",
+        unread: 0,
+        messages: [
+          { sender: "me", text: "Miss you so much ;(" },
+          { sender: "them", text: "😂 لماذا أنت مضحكٌ جداً؟ ههه" },
+          { sender: "them", text: "I will go to Indonesia later" }
+        ]
+      },
+      {
+        id: 2,
+        name: "Mama ❤️",
+        avatar: "https://i.pinimg.com/736x/01/be/3e/01be3e46c76dbbeac7b57b11d95079a4.jpg",
+        time: "10:15",
+        unread: 0,
+        messages: [
+          { sender: "them", text: "Jangan lupa makan ya nak ✨" }
+        ]
+      },
+      {
+        id: 3,
+        name: "Sha 💖",
+        avatar: "https://i.pinimg.com/736x/21/d9/39/21d939a3f25c27633e9d80d24ee4be1b.jpg",
+        time: "Baru saja",
+        unread: 1,
+        messages: [
+          { sender: "them", text: "be, jadi ngga?" }
+        ]
+      },
+      {
+        id: 4,
+        name: "sekawan-kawan 👥",
+        avatar: "https://i.pinimg.com/736x/a2/5b/4b/a25b4b73b5c6e866e4a2cbe7d0571bc8.jpg",
+        time: "12:30",
+        unread: 0,
+        messages: [
+          { sender: "them", text: "Jenna: wkwkwk" }
+        ]
+      }
+    ];
 
-        // Render WhatsApp Chat List
-        function renderWhatsAppList() {
-            const container = document.getElementById('wa-chat-container');
-            container.innerHTML = '';
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('status-clock').innerText = `${h}:${m}`;
+      document.getElementById('lock-clock').innerText = `${h}:${m}`;
+    }
+    setInterval(updateClock, 1000); updateClock();
 
-            whatsappChats.forEach(chat => {
-                const lastMsg = chat.messages[chat.messages.length - 1].text;
-                const unreadBadge = chat.unread > 0 
-                    ? `<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">${chat.unread}</span>` 
-                    : '';
+    function showPasscode() {
+      document.getElementById('lock-screen').classList.remove('active');
+      document.getElementById('passcode-screen').classList.add('active');
+    }
 
-                const chatHtml = `
-                    <div onclick="openWaDetail(${chat.id})" class="py-3 flex items-center space-x-3 cursor-pointer active:bg-zinc-900/50 transition">
-                        <img src="${chat.avatar}" class="w-12 h-12 rounded-full object-cover">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-baseline">
-                                <h4 class="text-sm font-semibold text-white truncate">${chat.name}</h4>
-                                <span class="text-[11px] text-zinc-500">${chat.time}</span>
-                            </div>
-                            <div class="flex justify-between items-center mt-0.5">
-                                <p class="text-xs text-zinc-400 truncate">${lastMsg}</p>
-                                ${unreadBadge}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += chatHtml;
-            });
-        }
+    let passCount = 0;
+    function pressKey(num) {
+      const dots = document.querySelectorAll('.dot');
+      if (passCount < 4) {
+        dots[passCount].classList.add('active');
+        passCount++;
+      }
+      if (passCount === 4) {
+        setTimeout(() => {
+          document.getElementById('passcode-screen').classList.remove('active');
+          document.getElementById('home-screen').classList.add('active');
+          passCount = 0;
+          dots.forEach(d => d.classList.remove('active'));
+        }, 200);
+      }
+    }
 
-        // Open WhatsApp Individual Detail Conversation
-        function openWaDetail(chatId) {
-            const chat = whatsappChats.find(c => c.id === chatId);
-            if(!chat) return;
+    function openApp(id) {
+      if(id === 'wa') {
+        renderChatList();
+        document.getElementById('wa-app').classList.add('active');
+      }
+    }
 
-            document.getElementById('wa-detail-name').innerText = chat.name;
-            document.getElementById('wa-detail-avatar').src = chat.avatar;
+    function closeApp(id) {
+      document.getElementById(`${id}-app`).classList.remove('active');
+    }
 
-            const msgBox = document.getElementById('wa-messages-box');
-            msgBox.innerHTML = '';
+    function renderChatList() {
+      const container = document.getElementById('chat-list');
+      container.innerHTML = whatsappChats.map(chat => `
+        <div class="chat-item" onclick="openChat(${chat.id})">
+          <img src="${chat.avatar}" class="chat-avatar">
+          <div class="chat-info">
+            <div class="chat-name">${chat.name}</div>
+            <div class="chat-msg">${chat.messages[chat.messages.length - 1].text}</div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-            chat.messages.forEach(m => {
-                const isMe = m.sender === 'me';
-                const msgHtml = `
-                    <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                        <div class="max-w-[75%] rounded-2xl px-3.5 py-2 text-xs ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-zinc-800 text-white rounded-bl-none'}">
-                            ${m.text}
-                        </div>
-                    </div>
-                `;
-                msgBox.innerHTML += msgHtml;
-            });
+    function openChat(id) {
+      const chat = whatsappChats.find(c => c.id === id);
+      document.getElementById('chat-title').innerText = chat.name;
+      const msgArea = document.getElementById('messages-container');
+      msgArea.innerHTML = chat.messages.map(m => `
+        <div class="msg-bubble ${m.sender === 'me' ? 'msg-out' : 'msg-in'}">${m.text}</div>
+      `).join('');
+      document.getElementById('chat-room').classList.add('active');
+    }
 
-            document.getElementById('wa-detail-view').classList.remove('hidden');
-        }
-
-        function closeWaDetail() {
-            document.getElementById('wa-detail-view').classList.add('hidden');
-        }
-
-        /* --- SCREEN TRANSITIONS --- */
-
-        // Go from Lock Screen -> Passcode Screen
-        function goToPasscode() {
-            document.getElementById('screen-lock').classList.add('screen-hidden-up');
-            document.getElementById('screen-passcode').classList.remove('screen-hidden-down');
-        }
-
-        // Cancel Passcode -> Lock Screen
-        function cancelPasscode() {
-            enteredPin = "";
-            updatePinDots();
-            document.getElementById('screen-passcode').classList.add('screen-hidden-down');
-            document.getElementById('screen-lock').classList.remove('screen-hidden-up');
-        }
-
-        // Press Pin Pad
-        function pressPin(digit) {
-            if(enteredPin.length < 4) {
-                enteredPin += digit;
-                updatePinDots();
-            }
-
-            if(enteredPin.length === 4) {
-                setTimeout(() => {
-                    if(enteredPin === DEFAULT_PIN || enteredPin.length === 4) { 
-                        // Auto Unlock
-                        unlockPhone();
-                    } else {
-                        // Wrong Pin Shake Effect
-                        const dotsContainer = document.getElementById('pin-dots');
-                        dotsContainer.classList.add('animate-shake');
-                        setTimeout(() => {
-                            dotsContainer.classList.remove('animate-shake');
-                            enteredPin = "";
-                            updatePinDots();
-                        }, 400);
-                    }
-                }, 150);
-            }
-        }
-
-        function updatePinDots() {
-            const dots = document.getElementById('pin-dots').children;
-            for(let i = 0; i < 4; i++) {
-                if(i < enteredPin.length) {
-                    dots[i].classList.add('bg-white');
-                } else {
-                    dots[i].classList.remove('bg-white');
-                }
-            }
-        }
-
-        // Unlock Phone -> Home Screen
-        function unlockPhone() {
-            document.getElementById('screen-passcode').classList.add('screen-hidden-up');
-            enteredPin = "";
-            updatePinDots();
-        }
-
-        // Open App
-        function openApp(appId) {
-            const app = document.getElementById(appId);
-            if(app) {
-                app.classList.remove('app-closed');
-                app.classList.add('app-open');
-                activeAppId = appId;
-            }
-        }
-
-        // Close Active App (Click Home Bar)
-        function closeCurrentApp() {
-            if(activeAppId) {
-                const app = document.getElementById(activeAppId);
-                if(app) {
-                    app.classList.remove('app-open');
-                    app.classList.add('app-closed');
-                }
-                activeAppId = null;
-            }
-        }
-
-        // Phone App Dial Pad
-        let dialedNumber = "";
-        function dialNum(num) {
-            dialedNumber += num;
-            document.getElementById('phone-number-display').innerText = dialedNumber;
-        }
-    </script>
+    function closeChat() {
+      document.getElementById('chat-room').classList.remove('active');
+    }
+  </script>
 </body>
 </html>
