@@ -42,12 +42,25 @@
         }
 
         /* iOS Wallpaper Background */
-        .galaxy-bg {
-            background-image: radial-gradient(circle at 50% 30%, #3a2258 0%, #110d26 50%, #05030a 100%),
-                              radial-gradient(circle at 80% 80%, #1a3c60 0%, transparent 50%),
-                              radial-gradient(circle at 20% 70%, #4a1942 0%, transparent 50%);
-            background-size: cover;
-            background-position: center;
+        ./* 1. BACKGROUND LUAR (Latar belakang di sekeliling bingkai HP) */
+body {
+  background-color: #0b0b0e; /* Ganti kode warna hex di sini (contoh: #000000, #1a1a2e, #f5f5dc) */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* 2. WALLPAPER LOCK SCREEN (Layar Kunci) */
+#lock-screen {
+  background: url('https://i.pinimg.com/736x/8f/c9/2c/8fc92c42ea9787ffcd6ce4bc18a47ff7.jpg') center/cover no-repeat;
+}
+
+#home-screen {
+  background: url('https://i.pinimg.com/736x/8f/c9/2c/8fc92c42ea9787ffcd6ce4bc18a47ff7.jpg') center/cover no-repeat;
         }
 
         /* Keypad Ripple */
@@ -169,7 +182,7 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline">
-                                <h4 class="text-sm font-semibold text-white truncate">Ulang Tahun 이소희 🎂</h4>
+                                <h4 class="text-sm font-semibold text-white truncate">Khaleed 0211</h4>
                                 <span class="text-[11px] text-white/60">sekarang</span>
                             </div>
                             <p class="text-xs text-white/80 truncate mt-0.5">21 November · 35 hari lagi</p>
@@ -198,7 +211,7 @@
             <div id="screen-passcode" class="screen screen-hidden-down absolute inset-0 z-40 glass-dark backdrop-blur-2xl flex flex-col justify-between pt-20 pb-12 px-8">
                 <!-- Header -->
                 <div class="flex flex-col items-center space-y-6">
-                    <h2 class="text-lg font-medium text-white tracking-wide">Masukkan Kode Sandi</h2>
+                    <h2 class="text-lg font-medium text-white tracking-wide">0211</h2>
                     
                     <!-- PIN Dots -->
                     <div id="pin-dots" class="flex space-x-4">
